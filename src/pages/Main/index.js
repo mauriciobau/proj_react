@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-
 import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 import api from '../../services/api';
 
@@ -86,7 +86,9 @@ export default class Main extends Component {
           {respositories.map(respository => (
             <li key={respository.name}>
               <span>{respository.name}</span>
-              <a href="">Detalhes</a>
+              <Link to={`/repository/${encodeURIComponent(respository.name)}`}>
+                DetLinklhes
+              </Link>
             </li>
           ))}
         </List>
