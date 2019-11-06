@@ -11,25 +11,26 @@ import { Form, SubmitButton, List } from './styles';
 export default class Main extends Component {
   state = {
     newRepo: '',
-    respositories: [],
+    repositories: [],
     loading: false,
+    error: null,
   };
 
   // Carregar dados do localstorage
   componentDidMount() {
-    const respositories = localStorage.getItem('repositories');
+    const repositories = localStorage.getItem('repositories');
 
-    if (respositories) {
-      this.setState({ respositories: JSON.parse(respositories) });
+    if (repositories) {
+      this.setState({ repositories: JSON.parse(repositories) });
     }
   }
 
   // Salvar os dados do localstorage
   componentDidUpdate(_, prevState) {
-    const { respositories } = this.state;
+    const { repositories } = this.state;
 
-    if (prevState.respositories !== respositories) {
-      localStorage.setItem('repositories', JSON.stringify(respositories));
+    if (prevState.repositories !== repositories) {
+      localStorage.setItem('repositories', JSON.stringify(repositories));
     }
   }
 
@@ -40,25 +41,37 @@ export default class Main extends Component {
   handleSubmit = async e => {
     e.preventDefault();
 
-    this.setState({ loading: true });
+    this.setState({ loading: true, error: false });
 
-    const { newRepo, respositories } = this.state;
+    try {
+      const { newRepo, repositories } = this.state;
 
-    const response = await api.get(`/repos/${newRepo}`);
+      if (newRepo === '') throw 'Você precisa indicar um repositório';
 
-    const data = {
-      name: response.data.full_name,
-    };
+      const hasRepo = repositories.find(r => r.name === newRepo);
 
-    this.setState({
-      respositories: [...respositories, data],
-      newRepo: '',
-      loading: false,
-    });
+      if (hasRepo) throw 'Repositório duplicado';
+
+      const response = await api.get(`/repos/${newRepo}`);
+
+      const data = {
+        name: response.data.full_name,
+      };
+
+      this.setState({
+        repositories: [...repositories, data],
+        newRepo: '',
+      });
+    } catch (error) {
+      console.log(error);
+      this.setState({ error: true });
+    } finally {
+      this.setState({ loading: false });
+    }
   };
 
   render() {
-    const { newRepo, respositories, loading } = this.state;
+    const { newRepo, repositories, loading, error } = this.state;
 
     return (
       <Container>
@@ -67,7 +80,7 @@ export default class Main extends Component {
           Repositórios
         </h1>
 
-        <Form onSubmit={this.handleSubmit}>
+        <Form onSubmit={this.handleSubmit} error={error}>
           <input
             type="text"
             placeholder="Adicionar repositório"
@@ -85,11 +98,11 @@ export default class Main extends Component {
         </Form>
 
         <List>
-          {respositories.map(respository => (
+          {repositories.map(respository => (
             <li key={respository.name}>
               <span>{respository.name}</span>
               <Link to={`/repository/${encodeURIComponent(respository.name)}`}>
-                DetLinklhes
+                Detalhies
               </Link>
             </li>
           ))}
